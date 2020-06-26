@@ -45,6 +45,12 @@ post '/translate' => sub {
   });
 };
 
+hook before_dispatch => sub {
+  my $c = shift;
+  return unless my $base_url = $c->req->headers->header('X-Request-Base');
+  $c->req->url->base(Mojo::URL->new($base_url)) if $ENV{MOJO_REVERSE_PROXY};
+};
+
 app->start;
 
 __DATA__
