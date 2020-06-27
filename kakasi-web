@@ -68,7 +68,7 @@ __DATA__
 <body>
   <form>
     <header class="header">
-      <h1 class="py-4">Kakasi powered online furigana editor</h1>
+      <h1>kakasi-web</h1>
     </header>
     <main class="io">
       <table class="io-table">
@@ -115,6 +115,10 @@ __DATA__
 </body>
 
 @@ kakasi.css.ep
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
   font-family: Roboto, sans;
@@ -125,15 +129,19 @@ body {
 
 body {
   background: #f6f6f6;
+  border-bottom: 4px solid #b33838;
+  min-height: 100vh;
 }
 
 button {
   background: #fff;
   font-size: 16px;
+  line-height: 1.4em;
   border: 1px solid #939393;
   border-radius: 3px;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2)
-  padding: 0.1rem 0.2rem;
+  padding: 0.1em 0.2em;
+  height: 1.6em;
   cursor: pointer;
 }
 
@@ -143,9 +151,10 @@ button:hover {
 }
 
 button.delete {
-  background: #e15454;
+  background: #b33838;
   color: #fff;
   border-color: #e15454;
+  margin-top: 0.3rem;
 }
 
 button[disabled] {
@@ -181,17 +190,20 @@ ruby rt {
 }
 
 ruby:hover rt {
-  color: #4488aa;
+  color: #b33838;
   transform: scale(1.4);
 }
 
 .header {
-  text-align: center;
+  background: #730606;
+  color: #fff;
+  padding: 0.4rem 2rem;
+  overflow: hidden;
 }
 
 .header h1 {
-  font-size: 2rem;
-  margin: 2rem;
+  font-size: 1.4rem;
+  margin: 0;
   position: relative;
 }
 
@@ -213,7 +225,6 @@ ruby:hover rt {
 .io-head th {
   vertical-align: middle;
   text-align: left;
-  border-bottom: 1px solid #4488aa;
 }
 
 .io-head .col {
@@ -222,7 +233,10 @@ ruby:hover rt {
 
 .io-table tbody tr td {
   vertical-align: top;
-  border-bottom: 1px dotted #7b9fb0;
+}
+
+.io-table tbody tr:hover td {
+  background: #eee;
 }
 
 .io__input,
@@ -231,13 +245,23 @@ ruby:hover rt {
   line-height: 2rem;
 }
 
-.io__remove {
-  width: 1%;
+.io-table td.io__input,
+.io-table td.io__notes {
+  padding: 0;
+}
+
+.io__input [contenteditable],
+.io__notes [contenteditable] {
+  padding: 0.5rem 0.4rem;
 }
 
 .io__input,
 .io__output {
   width: 40%;
+}
+
+.io__remove {
+  width: 1%;
 }
 
 .word,
@@ -251,13 +275,17 @@ ruby:hover rt {
 
 .word:hover,
 .word:hover rb {
-  border-bottom-color: #4488aa;
+  border-bottom-color: #b33838;
 }
 
 [contenteditable]:focus,
 [contenteditable]:hover {
-  outline: 1px dotted #4488aa;
-  outline-offset: 0.2rem;
+  outline: 1px dotted #b33838;
+  outline-offset: -2px;
+}
+
+[contenteditable]:focus {
+  outline: 1px solid #b33838;
 }
 
 @@ kakasi.js.ep
