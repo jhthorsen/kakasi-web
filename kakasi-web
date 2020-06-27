@@ -86,7 +86,7 @@ __DATA__
             </th>
             <th>Notes</th>
             <th>
-              <button type="button" class="close text-danger" aria-label="Delete">
+              <button type="button" class="delete" aria-label="Delete" disabled>
                 <span aria-hidden="true">&times;</span>
               </button>
             </th>
@@ -98,7 +98,7 @@ __DATA__
             <td class="io__output"></td>
             <td class="io__notes"><div contenteditable="true"></div></td>
             <td class="io__remove">
-              <button type="button" class="close text-danger" aria-label="Delete">
+              <button type="button" class="delete" aria-label="Delete">
                 <span aria-hidden="true">&times;</span>
               </button>
             </td>
@@ -132,8 +132,26 @@ button {
   font-size: 16px;
   border: 1px solid #939393;
   border-radius: 3px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2)
   padding: 0.1rem 0.2rem;
   cursor: pointer;
+}
+
+button:focus,
+button:hover {
+  box-shadow: 0 1px 2px 1px rgba(0, 0, 0, 0.4)
+}
+
+button.delete {
+  background: #e15454;
+  color: #fff;
+  border-color: #e15454;
+}
+
+button[disabled] {
+  background: #ccc;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 select {
@@ -179,6 +197,7 @@ ruby:hover rt {
 
 .io {
   padding: 2rem;
+  padding-bottom: 30vh;
 }
 
 .io-table {
@@ -260,7 +279,7 @@ class Kakasi {
     this.form = form;
     this.firstRow = form.querySelector('.io tbody tr');
     this._addTrEventHandlers(this.firstRow);
-    form.addEventListener('submit', this.onSubmit.bind(this));
+    form.addEventListener('submit', this._onSubmit.bind(this));
     this.select('-mode').addEventListener('change', this.translate.bind(this));
     this.load();
     this.translate();
@@ -281,6 +300,9 @@ class Kakasi {
     data.text.forEach((line, i) => {
       const tr = i ? this.addRow() : this.firstRow;
       this.select('-input', tr).textContent = line;
+
+      const note = data.notes && data.notes.length ? data.notes.shift() : undefined;
+      if (typeof note != undefined) this.select('-note', tr).textContent = note;
     });
   }
 
@@ -290,14 +312,17 @@ class Kakasi {
     return this;
   }
 
-  onSubmit(e) {
-    e.preventDefault();
-    this.translate();
+  removeRow(tr) {
+    const text = this.select('-input', tr).textContent;
+    if (!text.match(/\S/)) return;
+    tr.remove();
+    this._save();
   }
 
   select(sel, parent = this.form, method = 'querySelector') {
     if (sel == '-input') return parent[method]('.io__input [contenteditable]');
     if (sel == '-mode') return parent[method]('[name=mode]');
+    if (sel == '-note') return parent[method]('.io__notes [contenteditable]');
     if (sel == '-output') return parent[method]('.io__output');
     return parent[method](sel);
   }
@@ -310,7 +335,7 @@ class Kakasi {
     const text = this.selectAll('-input').map(el => el.textContent.trim());
     const body = JSON.stringify({mode: this.mode(), text});
 
-    localStorage.setItem('kakasi_body', body);
+    this._save();
     fetch(this.translateUrl, {method: 'POST', body}).then(res => {
       return res.json();
     }).then(json => {
@@ -323,13 +348,34 @@ class Kakasi {
 
   _addTrEventHandlers(tr) {
     let tid;
+
+    this.select('button', tr).addEventListener('click', e => {
+      e.preventDefault();
+      this.removeRow(tr);
+    });
+
+    this.select('-note', tr).addEventListener('keydown', e => {
+      if (e.key == 'Enter') e.preventDefault();
+      if (tid) clearTimeout(tid);
+      tid = setTimeout(this._save.bind(this), 350);
+    });
+
     this.select('-input', tr).addEventListener('keydown', e => {
+      if (e.key == 'Enter') e.preventDefault();
       if (tid) clearTimeout(tid);
       tid = setTimeout(this.translate.bind(this), 350);
-
-      if (e.key == 'Enter') {
-        e.preventDefault();
-      }
     });
+  }
+
+  _onSubmit(e) {
+    e.preventDefault();
+    this.translate();
+  }
+
+  _save() {
+    const text = this.selectAll('-input').map(el => el.textContent.trim());
+    const notes = this.selectAll('-note').map(el => el.textContent.trim());
+    const body = JSON.stringify({mode: this.mode(), notes, text});
+    localStorage.setItem('kakasi_body', body);
   }
 }
